@@ -1,0 +1,22 @@
+#!/bin/bash
+myparted(){
+parted $1 mktable gpt
+parted $1 mkpart primary 0 1G
+parted $1 mkpart primary 1001M 2G
+parted $1 mkpart primary 2001M 3G
+parted $1 mkpart primary 3001M 4G
+mkfs.ext3 ${1}1 
+mkfs.ext3 ${1}2 
+mkfs.ext3 ${1}3 
+mkfs.ext3 ${1}4 
+for x in {1..4}
+do
+mkdir -p /mnt${1}$x
+echo "${1}$x /mnt${1}$x ext3 defaults 0 0" >> /etc/fstab
+done
+for i in {1..5}
+do
+	mount -a
+	sleep 1
+done
+}

@@ -1,0 +1,241 @@
+一、检测教学环境Yum仓库
+虚拟机A
+[root@svr7 ~]# yum clean all
+[root@svr7 ~]# yum repolist 
+虚拟机B
+[root@pc207 ~]# yum clean all
+[root@pc207 ~]# yum repolist 
+
+##################################################
+在虚拟机A上搭建DNS服务器,负责解析sina.com
+最终实现虚拟机A解析www.sina.com结果为192.168.4.10
+
+######################################################
+Split分离解析
+
+什么是分离解析
+• 当收到客户机的DNS查询请求的时候
+– 能够区分客户机的来源地址
+– 为不同类别的客户机提供不同的解析结果(IP地址)
+– 为客户端提供最近的网络资源
+   
+	view "联通"  {
+	match-clients { 来源地址1; .. ..; }
+	zone "12306.cn" IN {
+	...... 地址库1;
+	}; };
+
+	view "铁通"  {
+	match-clients { 来源地址2; .. .. ; }
+	zone "12306.cn" IN {
+	...... 地址库2;
+	}; };
+
+####################################################
+
+• 环境及需求
+– 权威DNS:svr7.tedu.cn 192.168.4.7
+– 负责区域:tedu.cn
+– A记录分离解析 —— 以 www.tedu.cn 为例
+客户机来自 解析结果
+  192.168.4.207--------->192.168.4.100
+          其他地址 --------->1.2.3.4
+
+注意事项：
+   1.所有客户端都要找到自己的类别，分类要合理
+   2.优先级由上及下匹配， 匹配及停止
+   3.所有的zone必须都在view中
+
+虚拟机A：
+1.书写配置文件/etc/named.conf
+	view "nsd" {                        #分类名称
+ 	 match-clients { 192.168.4.207; };  #匹配客户端来源IP地址
+ 	 zone "tedu.cn" IN {              #定义负责解析的区域
+       	 type master;                #定义主DNS服务器
+       	 file "tedu.cn.zone";        #地址库文件名称
+ 	};
+	};
+	view "other" {
+ 	 match-clients { any; };
+  	 zone "tedu.cn" IN {
+      	  type master;
+       	  file "tedu.cn.other";
+ 	};
+	};
+2.建立两个地址库文件,写入不同解析结果,然后重起服务
+[root@svr7 /]# vim /var/named/tedu.cn.zone 
+	tedu.cn.  NS    svr7
+	svr7      A     192.168.4.7
+	www       A     192.168.4.100
+[root@svr7 /]# vim /var/named/tedu.cn.other
+	tedu.cn.  NS    svr7
+	svr7      A     192.168.4.7
+	www       A     1.2.3.4
+
+
+
+
+##################################################
+acl地址列表
+
+  acl "liantong" {
+    IP地址1; IP地址2; .. ..
+      网段1; 网段2; .. ..
+      .. ..
+     };
+
+1.书写配置文件/etc/named.conf
+acl "test" { 192.168.4.207; 192.168.4.200;    
+                      192.168.7.0/24; 192.168.1.0/24;                    
+                      192.168.10.0/24; };
+
+view "nsd" {
+  match-clients { test; };
+  zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.zone";
+ };
+};
+
+###################################################
+多区域的分离解析
+注意事项：每一个view中，zone的个数要一致,zone的区域也要一致
+
+  www.tedu.cn  192.168.4.207----》192.168.4.100
+  www.tedu.cn  any----》1.2.3.4
+
+  www.qq.com  192.168.4.207----》192.168.4.100
+  www.qq.com  192.168.4.200----》11.12.13.14
+  www.qq.com  any----》1.2.3.4
+
+
+[root@svr7 /]# vim /etc/named.conf
+options {
+        directory       "/var/named";
+ };
+acl "test" {  192.168.4.207; };
+view "nsd" {
+  match-clients { test; };
+  zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.zone";----》192.168.4.100
+   };
+  zone "qq.com" IN {
+        type master;
+        file "qq.com.zone";----》192.168.4.100
+   };
+ };
+view "test" {
+  match-clients { 192.168.4.200; };
+  zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.test";----》1.2.3.4
+   };
+  zone "qq.com" IN {
+        type master;
+        file "qq.com.test";----》11.12.13.14
+   };
+ };
+view "other" {
+  match-clients { any; };
+  zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.test";----》1.2.3.4
+ };
+  zone "qq.com" IN {
+        type master;
+        file "qq.com.other";----》1.2.3.4
+ };
+ };
+
+################################################
+RAID阵列概述
+• 廉价冗余磁盘阵列
+– 通过硬件/软件技术,将多个较小/低速的磁盘整合成一个大磁盘
+
+– 阵列的价值:提升I/O效率、硬件级别的数据冗余
+– 不同RAID级别的功能、特性各不相同
+
+
+• RAID 0,条带模式
+– 同一个文档分散存放在不同磁盘
+– 并行写入以提高效率
+– 至少需要2块磁盘
+
+• RAID 1,镜像模式
+– 一个文档复制成多份,分别写入不同磁盘
+– 多份拷贝提高可靠性,效率无提升
+– 至少需要2块磁盘
+
+• RAID5,高性价比模式
+– 相当于RAID0和RAID1的折中方案
+– 需要至少一块磁盘的容量来存放校验数据
+– 至少需要3块磁盘
+
+• RAID6,高性价比/可靠模式
+– 相当于扩展的RAID5阵列,提供2份独立校验方案
+– 需要至少两块磁盘的容量来存放校验数据
+– 至少需要4块磁盘
+
+RAID0/1/10
+• RAID 0+1/RAID 1+0
+– 整合RAID 0、RAID 1的优势
+– 并行存取提高效率、镜像写入提高可靠性
+– 至少需要4块磁盘
+
+• 硬RAID:由RAID控制卡管理阵列
+– 主板 ---> 阵列卡---> 磁盘 ---> 操作系统--->  数据
+• 软RAID:由操作系统来管理阵列
+– 主板 --->  磁盘---> 操作系统--->  RAID软件--->  数据
+
+###############################################
+进程管理
+
+    程序：静态的代码   仅占用磁盘存储
+
+    进程：动态的代码   占用 CPU与内存
+
+    唯一编号：PID
+
+    父进程/子进程
+
+查看进程树
+• pstree — Processes Tree
+– 格式:pstree [选项] [PID或用户名]
+
+• 常用命令选项
+– -a:显示完整的命令行
+– -p:列出对应PID编号
+
+[root@svr7 /]# pstree
+
+   systemd(上帝进程)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

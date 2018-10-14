@@ -1,0 +1,16 @@
+显示不包 834 的行
+	sed -n '/843/!p' data.txt
+显示电话号码的区号为 834 的行
+	sed -n '/^.*:834-.*$/p' data.txt
+显示这样的行:它包含一个大写字后跟四个小写字母,逗号,空格,和一个大写字母
+	sed -r -n '/.*[A-Z]{1}[a-z]{4}, [A-Z]{1}/p' data.txt
+显示以 K 或 k 开头的行
+	sed -r -n '/^k|^K/p' data.txt
+显示工资为六位数的行
+	sed -r -n '/([1-9]{1}[0-9]{5})$/p' data.txt
+显示包括 Lincoln 或 lincoln 的行
+	sed -n -r '/Lincoln|lincoln/p' data.txt
+把 Jon 的名字改成 Jonathan
+	sed -n 's/Jon/Jonathan/p' data.txt
+把三个星***添加到有 Fred 的行
+	sed -n -r 's/(^.*Fred.*$)/\1***/p' data.txt 

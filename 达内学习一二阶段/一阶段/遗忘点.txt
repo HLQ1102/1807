@@ -1,0 +1,41 @@
+web服务更改网页文件根目录注意事项
+	软件：httpd
+	vim /etc/httpd/conf/httpd.conf (主配置文件)
+	vim /etc/httpd/conf.d/*.conf
+	防火墙
+	selinux安全上下文值 使用命令chcon --reference=/var/www/ /xiao 更改
+	访问端口更改:
+		打开selinux的semanage
+			semanage port -a -t http_port_t -p tcp 8909
+			semanage port -l | grep http  #查看http端口情况
+	更改虚拟主机的路径/etc/http/conf.d/*.conf
+		<VirtualHost *:80>
+        		ServerName www0.example.com
+       		DocumentRoot /www/cn
+		</VirtualHost>
+
+	更改acl访问控制项/etc/http/conf.d/*.conf
+		<Directory /www/cn/>
+      		equire all granted
+		</Directory>
+
+samba共享注意事项：
+	软件： yum -y install samba
+	vim /etc/samba/smb.conf
+	添加共享用户 pdbedit -a harry
+	防火墙
+	setsebool samba_export_t rw
+
+iscsi网络磁盘共享注意事项
+	1.服务端：
+		软件： targetcli
+		backstore/block
+		iscsi/iqn.2018.08.old.cn:xiao/tpd1/luns|acls|portals create
+	2.客户端：
+		软件：iscsi-initiator-utils
+	3.配置完/etc/iscsi/initiatorname.iscsi文件， 
+		重启systenctl restart iscsid
+	4.配置完iscsiadm --mode discoverydb --type sendtargets --portal 192.168.1.10 --discover 	
+		重启systemctl restart iscsi
+
+ 检查  rht-labcheckcsa

@@ -1,0 +1,21 @@
+ 2. linux中磁盘的表示，第三块scsi磁盘的第二个分区？
+           sdc2
+
+ 3. linux中常见的文件系统都有哪些？
+         ext4   xfs   swap
+
+.ls常用选项有哪些？不用写作用
+        -l   -a   -h   -d
+
+使用 ls 命令完成以下任务,找出/etc/目录下以re开头.conf结尾的文件
+         ls  /etc/re*.conf
+
+请写出 设置chronyd为开机自启的命令
+    systemctl  enable  chronyd
+
+yum客户端配置文件放在什么路径下？具体都有哪些字段？
+       /etc/yum.repos.d/*.repo
+       []、name、baseurl、enabled、gpgcheck
+
+创建用户的命令是什么？常用的选项都有那些？
+     useradd   -u   -d   -s   -g

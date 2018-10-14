@@ -1,0 +1,44 @@
+• 检查内存大小、空闲情况
+[root@room9pc01 ~]# cat /proc/meminfo 
+
+grep [选项] 匹配字段 /路径/文档...
+-v 取反匹配
+-i 忽略大小写 
+^bin 匹配以bin开头的行
+Bin$ 匹配以bin结尾的 #grep -v ^$ /etc/passwd：过滤空行、 ^$：表示空行
+显示文件有效配置信息 （去除空行，去除注释）
+例：grep -v ^# /etc/login.defs | grep -v ^$
+
+find [目录][条件1] [-a|-o] [条件2] ...   #-a:and  -o:or
+-type d/f/l     #类型(d、f、l  目录、文件、快捷方式)
+-name “文件或文件夹的名字”	    #引号里面可用通配符* 、？\
+-size +与-   #单位k M G    例：find /boot/  -size +10M -o -size -20M
+-user 用户名 #按照文档的所有者
+-group 属主  #按照文档的所属组
+find ........ -exec 处理命令 {} \;   #{}表示find处理后的结果
+例：查找用户student的文件，并将他们复制菲奥/root/fidfiles中去。
+find / -user student -type f -exec cp {} /root/findfiles \;
+查找用户student的文件，并显示这些文件的详细信息
+find / -user student -type f -exec ls -lh \;
+
+-maxdepth number  #限制目录查找的深度（最大层数）
+
+-mtime  +-number #根据文件修改时间，所有的时间都是过去时间
+例：-mtime +10 #10天之前
+-mtime -10  #最近10天
+
+命令的执行依赖于解释器( 默认解释器：/bin/bash )
+
+ls命令
+ – -h:提供易读的容量单位(K、M等)
+ – -d:显示目录本身(而不是内容)的属性
+
+零散的软件管理
+• RPM Package Manager,RPM包管理器
+– rpm -q 软件名... #查看软件是否安装
+– rpm -ivh 软件名-版本信息.rpm... #安装软件包
+– rpm -e 软件名... #卸载软件包
+
+# rpm --import /dvd/RPM-GPG-KEY-redhat-release #/dvd 为rhel7.4安装包的挂载点
+
+

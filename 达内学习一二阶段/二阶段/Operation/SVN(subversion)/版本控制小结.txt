@@ -1,0 +1,41 @@
+svn[版本库]共享目录
+私vns import . gong享目录
+修改配置文件：
+
+共享：svnserver -d -r 共享目录
+下载：svn --username harry --password 123 svn://ip/   #共享时
+svn update
+svn ci
+svn add 
+svn mkdir
+svn cp
+svn cp 
+svn mv
+svn info
+svn log
+svn revert
+svn merge
+svn domp >
+svn load <
+
+git --> github.com ---> gitlab自己搭建git服务器
+
+RPM
+yum -y install rpm-build
+rpmbuild -ba nginx.spec  //报错
+    产生：/root/rpmbuild
+SOURCES:源码
+SPECS:配置文件
+./configure
+make && make install
+大包
+%file
+/usr/local/nginx/html/index.html
+%post  #安装后脚本
+useradd harry
+%pre   #安装前脚本
+useradd tom
+vim /etc/rc.local  #开机运行脚本
+
+varnish 缓存是网站里面的页面
+memcached 是缓存数据库 [key->value]型数据库

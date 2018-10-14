@@ -1,0 +1,104 @@
+#第一题
+#!/bin/bash
+i=1
+read -p "请输入数量:"  s
+while :
+do
+ echo $i | clone-vm7
+ [ $i -eq $s ]  && break
+
+ let i=i+=1
+done
+
+第二题
+!/bin/bash
+i=0
+j=1
+while [ $j -le 100 ]
+do 
+ let  i+=j
+ let j++
+done
+echo $i
+
+#第三题
+#!/bin/bash
+for i in {1..2000}
+do
+ [ $[i%2] -eq 0 ] && echo "$i" || echo 'warn'
+done
+#第四题
+#!/bin/bash
+read -p '请输入打印个数：'  p
+for i in `seq $p` 
+do
+	for o in `seq $p `
+	do
+	 [ $o -eq 1 ] && continue
+	 echo -n "* "
+	done
+ echo '* '
+done
+#第五题
+#!/bin/bash
+read -p "请输入任意一个字符:" a
+case $a in
+[a-Z])
+ echo "您输入的是字母";;
+[0-9])
+ echo "您输入的是数字";;
+*)
+ echo "您输入的是其他符号";;
+esac
+#第六题
+echo "还原server0中 。。。。"
+rht-vmctl reset server &> /dev/null
+echo "请为server0添加一块磁盘并重起"
+sleep  7
+virt-manager 
+read -p "输入回车继续" dd
+
+
+#!/bin/bash
+p(){
+ ssh $1 $2
+}
+p server0 "parted /dev/vdb mktable gpt"			
+p server0 "parted /dev/vdb mkpart nsd xfs 0G 2G"
+p server0 "parted /dev/vdb mkpart nsd xfs 2G 4G"
+
+p server0 "parted /dev/vdc mktable gpt"		
+p server0 "parted /dev/vdc mkpart nsd xfs 0G 2G"
+p server0 "parted /dev/vdc mkpart nsd xfs 2G 4G"
+
+p server0 "mkdir /b1 /b2"
+p server0 "mkfs.xfs /dev/vdb1" &>/dev/null
+p server0 "mkfs.xfs /dev/vdb2"	&>/dev/null
+p server0 "echo '/dev/vdb1 /b1 xfs defaults 0 0' >> /etc/fstab"
+p server0 "echo '/dev/vdb2 /b2 xfs defaults 0 0' >> /etc/fstab"
+p server0 "mount -a"
+p server0  "mkdir /c1 /c2"
+p server0 "mkfs.xfs /dev/vdc1"	&>/dev/null
+p server0 "mkfs.xfs /dev/vdc2"	&>/dev/null
+p server0 "echo '/dev/vdc1 /c1 xfs defaults 0 0' >> /etc/fstab"
+p server0 "echo '/dev/vdc2 /c2 xfs defaults 0 0' >> /etc/fstab"
+p server0  "mount -a"
+p server0  "df -h"
+#第八题
+#!/bin/bash
+p(){
+ ssh $1 $2
+}
+for i in desktop server
+do
+ p $i "yum -y install vsftpd" &> /dev/null
+ echo "安装ftp完成"
+done
+#第九题
+#!/bin/bash
+cd /etc/
+for i in `ls *.conf`
+do
+ [ "$i" == "/etc/yum.conf" ] && continue
+ tar -zcf /opt/$i.`date +%F`.tar.gz $i
+done

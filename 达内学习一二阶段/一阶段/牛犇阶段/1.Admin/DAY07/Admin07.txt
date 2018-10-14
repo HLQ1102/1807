@@ -1,0 +1,306 @@
+一、真机上，还原三台虚拟机环境
+[root@room9pc01 ~]# rht-vmctl  reset classroom
+[root@room9pc01 ~]# rht-vmctl  reset server
+[root@room9pc01 ~]# rht-vmctl  reset desktop
+
+[root@room9pc01 ~]# gos          #远程管理
+
+[root@server0 ~]# yum  clean  all     #清空Yum缓存
+[root@server0 ~]# yum  repolist      #显示Yum仓库信息
+   
+源标识        源名称                            状态
+rhel_dvd      Remote classroom copy of dvd      4,305
+repolist: 4,305
+
+######################################################
+周期性计划任务
+
+cron任务概述
+• 用途:按照设置的时间间隔为用户反复执行某一项固
+定的系统任务
+
+• 软件包:cronie、crontabs
+• 系统服务:crond
+• 日志文件:/var/log/crond
+
+crontab任务记录
+
+– 分   时   日   月    周    任务命令行(绝对路径)
+
+   *     *   *    *     *
+
+
+	*:匹配范围内任意时间
+	,:分隔多个不连续的时间点
+	-:指定连续时间范围
+	/n:指定时间频率,每n ...
+
+• 使用 crontab 命令
+– 编辑:crontab -e [-u 用户名]
+– 查看:crontab -l [-u 用户名]
+– 清除:crontab -r [-u 用户名]
+
+
+利用计划任务：
+   每分钟记录当前的系统时间，写入到/opt/time.txt
+
+[root@server0 ~]# date >> /opt/time.txt
+[root@server0 ~]# cat /opt/time.txt
+
+[root@server0 ~]# crontab -e -u root   #书写计划任务
+ * * * * *  date >> /opt/time.txt
+
+[root@server0 ~]# crontab -l           #查看计划任务
+ * * * * *  date >> /opt/time.txt
+
+[root@server0 ~]# cat /var/spool/cron/root   #任务文件
+ * * * * *  date >> /opt/time.txt
+
+##################################################
+附加权限
+
+Set UID
+• 附加在属主的 x 位上
+– 属主的权限标识会变为 s
+– 适用于可执行文件,Set UID可以让使用者具有文件属主的身份及部分权限
+– 传递所有者身份
+
+#######################################################
+Sticky Bit
+• 附加在其他人的 x 位上
+– 其他人的权限标识会变为 t
+– 适用于开放 w 权限的目录,可以阻止用户滥用 w 写入权限(禁止操作别人的文档)
+
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# chmod ugo=rwx /public
+[root@server0 ~]# ls -ld /public
+drwxrwxrwx. 2 root root 6 8月   8 10:58 /public
+
+[root@server0 ~]# chmod o+t /public/
+[root@server0 ~]# ls -ld /public/
+
+#####################################################
+查找文本内容
+• 根据字符串模式提取文本行
+– grep [选项] '匹配模式' 文本文件...
+– 命令行 | grep [选项] '匹配模式'
+
+• 常用命令选项
+– -v,取反匹配
+– -i,忽略大小写
+[root@server0 /]# grep  man /etc/man_db.conf
+[root@server0 /]# grep -i man /etc/man_db.conf
+
+[root@server0 /]# grep  root /etc/passwd
+
+[root@server0 /]# grep  ROOT /etc/passwd
+
+[root@server0 /]# grep  -i  ROOT /etc/passwd
+
+[root@server0 /]# grep  -v  root /etc/passwd
+
+#####################################################
+• 常用的匹配模式
+
+– word  包含字符串word
+– ^word 以字符串word开头
+– word$ 以字符串word结尾
+–  ^$       匹配空行
+
+[root@server0 /]# grep ^root /etc/passwd
+
+[root@server0 /]# grep bash$ /etc/passwd
+
+[root@server0 /]# cat  /etc/default/useradd
+[root@server0 /]# grep -v ^$ /etc/default/useradd
+ 
+  显示文件有效配置信息（去除空行，去除注释）
+[root@server0 /]# cat  /etc/login.defs 
+[root@server0 /]# grep -v ^# /etc/login.defs 
+
+
+# grep -v ^# /etc/login.defs  |  grep -v  ^$
+# grep -v ^# /etc/login.defs   |  grep -v ^$   > /opt/1.txt
+
+
+###################################################
+查找文件
+• 根据预设的条件递归查找对应的文件路径
+– find [目录] [条件1] [-a|-o] [条件2] ...
+	-type 类型(f 文本文件、d 目录、l 快捷方式)
+	-name "文档名称"
+	-size +|-文件大小(k、M、G)
+	-user 用户名
+
+      
+[root@server0 /]# find /boot/ -type  d      #查找是目录
+
+[root@server0 /]# find /boot/ -type  f      #查找是文件
+
+[root@server0 /]# find /boot/ -type  l      #查找是快捷方式
+[root@server0 /]# ls /boot/grub/menu.lst 
+[root@server0 /]# ls -l /boot/grub/menu.lst
+
+[root@server0 /]# find /root -type  d
+
+[root@server0 /]# find /etc  -type  l
+
+#####################################################
+  -name  "文档的名字"  
+
+[root@server0 /]# touch /root/nsd01.txt  /root/nsd02.txt
+[root@server0 /]# mkdir /root/nsd1807
+
+[root@server0 /]# find /root/ -name "nsd*"
+[root@server0 /]# find /root/ -name "nsd*" -a -type f
+[root@server0 /]# find /root/ -name "nsd*"  -type f
+[root@server0 /]# find /root/ -name "nsd*"  -type d
+
+[root@server0 /]# find /etc -name "*.conf"
+[root@server0 /]# find /etc -name "*tab"
+[root@server0 /]# find /boot -name "vm*"
+
+######################################################
+ -size +与-       #单位  k  M  G
+
+ -user 用户名    #按照文档的所有者
+
+[root@server0 /]# find /boot  -size +10M
+[root@server0 /]# find /boot  -size -10M
+
+[root@server0 /]# find /  -user student
+[root@server0 /]# find /  -user student -type f
+[root@server0 /]# find /  -user student -type d
+
+####################################################
+使用find命令的 -exec 操作
+– find .. .. -exec 处理命令 {} \;
+– 优势:以 {} 代替每一个结果,逐个处理,遇 \; 结束
+
+# find  /etc/  -name  "*tab" 
+# find  /etc/  -name  "*tab"  -exec  cp  {}  /mnt  \;
+# ls /mnt/
+
+# find  /boot/ -size  +10M
+# find  /boot/ -size  +10M  -exec  cp  {}  /mnt  \;
+# ls /mnt/
+
+• 使用find命令完成以下任务
+– 找出所有用户 student 拥有的文件
+– 把它们拷贝到 /root/findfiles/ 文件夹中
+ # mkdir /root/findfiles
+ # find  / -user student  -type f
+ # find  / -user student  -type f  -exec cp {} /root/findfiles/  \;
+
+ # ls -A /root/findfiles/
+#######################################################
+
+• 根据名称查找,忽略大小写
+– -iname
+
+
+• 根据所属组
+– -group
+
+
+• 限制目录查找的深度(最大层数)
+– -maxdepth
+
+[root@server0 /]# find /etc/ -maxdepth 1 -name "*.conf"
+
+[root@server0 /]# find /etc/ -maxdepth 2 -name "*.conf"
+
+[root@server0 /]# find /etc/ -maxdepth 3 -name "*.conf"
+
+
+• 根据文件修改时间,所有的时间都是过去时间
+ -mtime  +10   #10天之前
+ -mtime  -10   #最近10天之内
+
+[root@server0 /]# find /var/log/ -mtime +90
+[root@server0 /]# find /var/log/ -mtime +1000
+
+[root@server0 /]# find /var/log/ -mtime -10
+
+##################################################
+tar制作归档及压缩的包
+  
+ tar  -zcf   /路径/包名称.tar.gz    /路径/源文档  ......
+ tar  -jcf   /路径/包名称.tar.bz2   /路径/源文档  ......
+ tar  -Jcf   /路径/包名称.tar.xz    /路径/源文档  ......
+
+释放tar制作归档及压缩的包
+  tar -xf   /路径/包名称.tar.xz   -C  /路径/
+  
+#################################################
+ 权限内容
+
+1.看用户身份     所有者>所属组>其他人
+
+2.看相应位置的权限
+
+附加权限（有特殊的需要）
+  SUID ：传递所有者身份
+  SGID ：让新增的子文档，自动继承父目录所属组
+   t权限：开放w权限的目录，防止操作非本人的文档
+
+
+   基本权限        ACL访问控制列表       
+
+  1.尽量利用基本权限解决,尽量不要修改所有者与所属组
+  2.利用书写ACL访问控制列表  解决
+
+###################################################
+  Yum仓库
+
+  服务端: 1,搭建Web服务或FTP服务  2,共享光盘所有内容
+
+  客户端:  书写/etc/yum.repos.d/*.repo
+
+        baseurl= 服务端:显示光盘内容
+
+
+  1./etc/yum.repos.d/*.repo  文件名  有没有错误的文件
+
+  2.baseurl= 服务端:显示光盘内容    复制到浏览器中查看是否有光盘内容
+
+#######################################################
+DNS域名解析，将域名解析为IP地址
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

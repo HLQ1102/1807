@@ -1,0 +1,32 @@
+存放当前系统版本信息配置文件
+	/etc/redhat-release
+内存大小、空闲情况配置文件
+	/proc/meminfo
+网卡配置文件
+	/etc/sysconfig/network-scripts/ifcfg-eth0
+主机名配置文件
+	/etc/hostname
+Yum客户端配置文件：
+	/etc/yum.repos.d/*.repo
+永久别名的配置文件
+	/root/.bashrc
+DNS服务器配置文件/etc/resolv.conf 
+所有用户的基本信息配置文件
+	/etc/passwd
+	nsd07:x:1502:1502::/mnt/nsd07:/bin/bash
+	用户名:密码占位符:UID:基本组的GID:用户的描述信息:用户的家目录:解释器
+禁止用户登录系统shell
+	/sbin/nologin
+用户密码信息存放在 
+	/etc/shadow
+组基本信息存放在 
+	/etc/group
+	/etc/gshadow
+NTP服务器，修改配置文件
+	/etc/chrony.conf
+开机自动挂载文件 
+	/etc/fstab
+日志文件:
+	/var/log/crond
+计划任务配置文件
+	/var/spool/cron/root

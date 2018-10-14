@@ -1,0 +1,47 @@
+Tomcat[java web 服务器]
+httpd nginx
+tomcat websphere
+
+JDK(java)+Tomcat --->/usr/local/tomcat
+/usr/local/tomcat/bin/{startup.sh,shutdown.sh}
+/usr/local/tomcat/webapps/ROOT/index.jsp
+8005端口启动需要内存的大量的随机数据
+<Server port=8005>
+	<service>
+	    <connector port=8080>
+	    <connector port=8009>
+	    <connector port=8443 密钥文件，密钥的密码>
+         <Engine>
+		<Host name=www.a.com appBase="a">
+		    <Context path="/abc" docBase="a" />
+		</Host>
+		<Host name=www.a.com>
+		</Host>
+         </Engine>
+	</Server>
+</Server>
+keytool --help //产生安全加密文件
+
+httpd,nginx,tomcat[web源站点]
+带缓存的代理服务器varnish
+    varnish[缓存]
+    varnish[缓存]
+    varnish[缓存]
+源站点和缓存组合为CDN
+varnish[服务支持http协议]  rsync只是一个拷贝工具
+	varnish只有被访问的音频，视频，页面才会缓存
+	varnish 可以针对热点数据缓存，可以定时清理缓存
+yum -y install gcc readline-devel pcre-devel ncureses-devl python-docs  
+tar -xf varnish..
+cd varnish..
+./configure
+make && make install 
+
+useradd varnish
+cp etc/example.vcl /et/default.vcl
+vim /etc/default.vcl
+backend default {
+	.host= "192.168.2.100";
+	.port= "80";
+}
+

@@ -1,0 +1,291 @@
+Linux是一种操作系统
+
+   操作系统:一堆软件的集合，可以让计算机的硬件正常工作
+
+• UNIX诞生,1970-1-1
+
+• Linux之父,Linus Torwalds
+
+     内核：底层软件
+    
+         用户------->内核------>硬件
+
+  – 版本号:主版本.次版本.修订号
+
+
+• 是一套公开发布的完整Linux系统:   内核 + 各种应用软件
+
+
+
+######################################################
+利用虚拟机，安装RHEL7系统
+
+  按Ctrl+Alt 鼠标回到真机
+
+修改桌面背景
+关闭节电功能
+
+#####################################################
+RHEL7基本概念
+
+如何使用硬盘?
+• 一块硬盘的“艺术”之旅
+
+– 物理硬盘==>分区规划==>格式化==>读/写文档
+
+– 毛坯楼层==>打隔断==>装修==>入驻
+
+
+  格式化：赋予空间文件系统的过程，赋予空间的规则
+
+  文件系统：存储数据的规则
+
+• 典型的文件系统类型
+– EXT4,第四代扩展文件系统,RHEL6系列默认
+– XFS,高级日志文件系统,RHEL7系列默认
+– SWAP,交换空间(虚拟内存)：利用硬盘空间，缓解物理真实内存不足
+
+Linux目录结构：树型结构
+   
+    根目录  /  ：所有的数据都在此目录下，Linux系统的起点
+
+    路径表示：  /test/abc/1.txt    一个路径开始的  /  为根目录
+
+  /dev：设备相关的数据（例如：键盘、鼠标、硬盘、光驱.......）
+
+磁盘与分区表示
+  hd,表示IDE设备
+  sd,表示SCSI设备
+
+   /dev/hda1   /dev/hdb2     /dev/hdc1    /dev/hdd2
+
+   /dev/sda1   /dev/sdb2     /dev/sdc3    /dev/sdd4
+
+    /dev/sda5:表示SCSI设备,第一块磁盘，第5个分区
+
+#####################################################
+RHEL7基本操作
+
+获取命令行界面
+• 虚拟控制台切换( Ctrl + Alt + Fn 组合键)
+– tty1:图形桌面
+– tty2~tty6:字符控制台
+
+开启图形命令行
+• 桌面空白处，右键“打开终端”
+• 应用程序 --> 工具 --> 终端
+
+######################################################
+• 命令行提示标识的含义
+– [当前用户@主机名 工作目录]$
+
+– 若当前用户是root,则最后一个字符为 #
+[root@svr7 桌面]#
+
+– 否则,最后一个字符为 $
+[teacher@svr7 桌面]$
+
+#####################################################
+查看及切换目录
+• pwd — Print Working Directory
+– 用途:查看当前工作目录，显示当前所在位置
+
+• cd — Change Directory
+– 用途:切换工作目录
+– 格式:cd   [目标文件夹位置]
+
+• ls — List
+– 格式:ls [选项]... [目录或文件名]...
+
+[root@localhost ~]# pwd           #显示当前所在位置
+[root@localhost ~]# cd    /       #切换目录到根目录下
+[root@localhost /]# pwd
+[root@localhost /]# ls            #显示当前目录内容
+
+[root@localhost /]# cd  /dev
+[root@localhost dev]# pwd
+[root@localhost dev]# ls 
+
+[root@localhost dev]# cd /root
+[root@localhost root]# pwd
+[root@localhost root]# ls
+
+[root@localhost root]# cd /boot
+[root@localhost boot]# pwd
+[root@localhost boot]# ls
+
+
+颜色方面：
+    蓝色：目录
+    黑色：文本文件
+
+[root@localhost ~]# ls  /  /home/  /root/
+
+[root@localhost ~]# ls  /boot
+[root@localhost ~]# ls  /bin
+[root@localhost ~]# ls  /etc
+[root@localhost ~]# ls  /opt
+[root@localhost ~]# ls  /tmp
+
+######################################################
+cat查看文本文件的内容
+
+[root@localhost ~]# ls   /root/
+[root@localhost ~]# cat  /root/anaconda-ks.cfg
+
+[root@localhost ~]# ls   /etc/passwd
+[root@localhost ~]# cat  /etc/passwd
+
+[root@localhost ~]# ls   /etc/fstab
+[root@localhost ~]# cat  /etc/fstab
+
+存放当前系统版本信息配置文件/etc/redhat-release
+查看当前系统版本
+[root@localhost ~]# cat  /etc/redhat-release
+
+######################################################
+• 完整的命令一般格式
+
+– 命令字     [选项]...      [参数1]      [参数2]...
+
+[root@localhost ~]# cat  -n   /etc/redhat-release
+[root@localhost ~]# cat  -n   /etc/default/useradd
+[root@localhost ~]# cat  -n   /etc/passwd
+
+• 常用命令选项
+– -l :以长格式显示，显示目录内容的详细属性
+
+[root@localhost ~]# ls  -l  /root
+[root@localhost ~]# ls  -l  /boot
+[root@localhost ~]# ls  -l  /etc
+
+###################################################
+• 列出内核版本
+[root@svr7 桌面]# uname -r
+3.10.0-327.el7.x86_64      #主版本.次版本.修订号
+
+• 列出CPU处理器信息
+[root@svr7 桌面]# lscpu
+......
+CPU(s):                4           #4个核心
+......
+型号名称：        Intel(R) Core(TM) i5-4430S CPU @ 2.70GHz
+......
+• 检查内存大小、空闲情况
+[root@room9pc01 ~]# cat /proc/meminfo 
+MemTotal:       16166612 kB
+......
+#####################################################
+
+第一步：查看系统版本
+第二步：查看系统的主机名
+第三步：查看系统的IP地址    
+
+######################################################
+
+• 列出当前系统的主机名称
+[root@A ~]# hostname
+[root@A ~]# hostname  A.tedu.cn   #设置主机名
+[root@A ~]# hostname
+
+ 新开一个终端进行验证提示符的变化
+
+
+
+• 列出网卡连接信息
+[root@svr7 桌面]# ifconfig
+
+       127.0.0.1 ：永远代表本机
+
+[root@A ~]# ping 127.0.0.1
+
+ 结束正在运行的命令：Ctrl + c
+
+[root@A ~]# ifconfig eth0 192.168.1.1   #为网卡eth0 配置IP地址
+[root@A ~]# ifconfig 
+
+[root@A ~]# ping 192.168.1.1
+
+######################################################
+
+• 关机:poweroff
+[root@svr7 ~]# poweroff
+
+• 重启:reboot
+[root@svr7 ~]# reboot
+
+#####################################################
+• mkdir — Make Directory
+– 格式:mkdir   [/路径/]目录名...
+
+[root@A ~]# mkdir  test01     #当前创建
+[root@A ~]# ls                #查看当前路径下内容
+
+[root@A ~]# mkdir  /student   #在根目录下创建student目录
+[root@A ~]# ls  /             #查看根目录下内容
+
+[root@A ~]# mkdir /opt/test02  #在/opt目录创建test02目录
+[root@A ~]# ls /opt            #查看/opt目录内容
+
+• touch命令
+– 用途:新建空文件
+– 格式:touch 文件名...
+
+[root@A ~]# touch  /opt/2.txt
+[root@A ~]# ls /opt/
+
+###################################################
+  绝对路径：以根（/）开始的路径
+  相对路径：不以根（/）开始的路径，以当前路径为参照
+
+[root@A /]# cd   /etc/pki/
+[root@A pki]# ls
+
+[root@A pki]# cd   /etc/pki/java/     #绝对路径
+[root@A java]# pwd
+
+[root@A java]# cd   /etc/pki/    
+[root@A pki]# pwd
+[root@A pki]# ls
+
+[root@A pki]# cd   java               #相对路径   
+[root@A java]# pwd
+
+##################################################
+
+ cd  .. :返回上一层
+
+[root@A /]# cd /etc/pki/
+[root@A pki]# pwd
+/etc/pki
+[root@A pki]# cd   ..
+[root@A etc]# pwd
+/etc
+[root@A etc]# cd  ..
+[root@A /]# pwd
+/
+[root@A /]# 
+
+##################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

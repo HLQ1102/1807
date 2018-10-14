@@ -1,0 +1,334 @@
+一、关闭或删除classroom、server、desktop
+
+二、检测教学环境Yum仓库
+
+[root@svr7 ~]# yum clean all
+[root@svr7 ~]# yum repolist 
+
+[root@pc207 ~]# yum clean all
+[root@pc207 ~]# yum repolist 
+
+###################################################
+DNS解析的作用:将域名解析为IP地址
+
+• DNS服务器的功能
+– 正向解析:根据注册的域名查找其对应的IP地址
+– 反向解析:根据IP地址查找对应的注册域名,不常用
+
+   所有的域名必须以点作为结尾
+
+                            .   根域
+
+
+一级域名：  .com   .net  .org  .cn  .us  .jp  .kr  .tw .hk 
+
+
+二级域名：  .com.cn    .net.cn     .edu.cn   ........
+
+
+三级域名：   .nb.com.cn   .haxi.com.cn  .dc.com.cn  .....
+
+
+完整的主机名： www.nb.com.cn   tts.nb.com.cn   vip.nb.com.cn
+
+
+• Full Qualified Domain Name(FQDN),完全合格主机名
+
+#######################################################
+
+
+
+BIND域名服务
+• BIND(Berkeley Internet Name Daemon)
+– 伯克利 Internet 域名服务
+– 官方站点:https://www.isc.org/
+
+– 系统服务:named
+– 默认端口:TCP/UDP 53
+
+
+• 主配置文件:/etc/named.conf   设置本机负责解析的域名 
+• 地址库文件:/var/named/       记录域名与IP地址的对应关系
+
+搭建基本的DNS服务器
+
+虚拟机A：
+1.安装软件包
+[root@svr7 ~]# yum -y install bind-chroot bind
+ bind-9.9.4-29.el7.x86_64   //域名服务包
+ bind-chroot-9.9.4-29.el7.x86_64   //提供虚拟根支持
+
+2.修改主配置文件
+[root@svr7 ~]# cp /etc/named.conf  /root/
+[root@svr7 ~]# vim /etc/named.conf  
+ options {
+	directory 	"/var/named";  #指定地址库文件存放位置
+ };
+ zone "tedu.cn"  IN  {          #指定本机负责解析的域名
+	type  master;              #指定本机为权威服务器
+	file  "tedu.cn.zone";      #指定地址库文件名字
+ };
+
+3.建立地址库文件
+# cd  /var/named/
+# cp -p  named.localhost   tedu.cn.zone
+# ls -l  tedu.cn.zone
+# vim /var/named/tedu.cn.zone
+
+	tedu.cn.  NS    svr7
+	svr7      A     192.168.4.7
+	www       A     1.1.1.1
+	ftp       A     2.2.2.2
+
+4. 重起named服务
+# systemctl restart named
+
+客户端虚拟机B：
+# echo nameserver 192.168.4.7  >  /etc/resolv.conf 
+# cat   /etc/resolv.conf 
+# nslookup  www.tedu.cn
+# nslookup  ftp.tedu.cn
+
+#######################################################
+多区域DNS服务器
+虚拟机A：
+1.修改主配置文件/etc/named.conf  
+ zone "qq.com"  IN  {       
+	type  master;             
+	file  "qq.com.zone";      
+ };
+3.建立地址库文件
+# cd  /var/named/
+# cp -p  tedu.cn.zone   qq.com.zone
+# vim /var/named/qq.com.zone
+	qq.com.   NS    svr7
+	svr7      A     192.168.4.7
+	www       A     3.3.3.3
+	ftp       A     4.4.4.4
+
+4. 重起named服务
+# systemctl restart named
+
+######################################################
+特殊的解析记录
+
+一、DNS解析记录的轮询
+[root@svr7 /]# vim /var/named/tedu.cn.zone
+tedu.cn.  NS    svr7
+svr7      A     192.168.4.7
+www       A     192.168.4.1
+www       A     192.168.4.10
+www       A     192.168.4.100
+ftp       A     2.2.2.2
+
+[root@svr7 /]# systemctl restart named 
+
+二、泛域名解析
+   
+   pc1.tedu.cn -------》192.168.10.1
+   pc2.tedu.cn -------》192.168.10.2
+   pc3.tedu.cn -------》192.168.10.3
+     .......
+   pc50.tedu.cn -------》192.168.10.50
+
+  内置函数
+
+  $GENERATE 造数 连续范围的数字
+
+[root@svr7 /]# vim /var/named/tedu.cn.zone 
+
+  *          A      1.2.3.4
+
+  $GENERATE 1-50   pc$   A   192.168.10.$
+
+[root@svr7 /]# systemctl restart named 
+
+虚拟机B验证
+[root@pc207 /]# nslookup haha.tedu.cn
+[root@pc207 /]# nslookup pc1.tedu.cn
+[root@pc207 /]# nslookup pc2.tedu.cn
+[root@pc207 /]# nslookup pc50.tedu.cn
+
+三、解析记录的别名
+
+[root@svr7 /]# vim /var/named/tedu.cn.zone
+
+   tts       CNAME     ftp
+
+[root@svr7 /]#  systemctl restart named
+
+虚拟机B验证
+[root@pc207 /]# nslookup tts.tedu.cn
+
+################################################
+DNS子域授权
+
+            父域：www.qq.com
+
+            子域：www.bj.qq.com   
+
+      虚拟机A为DNS服务器，负责解析  父域：qq.com
+      虚拟机B为DNS服务器，负责解析  子域：bj.qq.com 
+
+虚拟机B搭建DNS服务器
+1.安装软件包bind  bind-chroot
+2.修改主配置文件
+[root@pc207 ~]# cp /etc/named.conf  /root/
+[root@pc207 ~]# vim /etc/named.conf 
+ options {
+        directory       "/var/named";
+ };
+ zone "bj.qq.com" IN {
+        type master;
+        file "bj.qq.com.zone";
+ };
+3.在/var/named路径下，建立地址库文件
+# cp  -p   named.localhost  bj.qq.com.zone
+  bj.qq.com.      NS      pc207
+  pc207           A       192.168.4.207
+  www             A       10.11.12.13
+[root@pc207 /]# nslookup www.bj.qq.com 192.168.4.207
+
+#################################################
+ 子域授权：在父域的DNS服务器上，指定子域服务器位置
+虚拟机A：
+[root@svr7 /]# vim /var/named/qq.com.zone
+	qq.com.    NS    svr7
+	bj.qq.com. NS    pc207
+	svr7       A     192.168.4.7
+	pc207      A     192.168.4.207
+	www        A     3.3.3.3
+[root@svr7 /]# systemctl restart named
+
+[root@pc207 /]# nslookup www.bj.qq.com 192.168.4.7
+	Server:		192.168.4.7
+	Address:	     192.168.4.7#53
+
+	Non-authoritative answer:    #非权威解答
+	Name:	www.bj.qq.com
+	Address: 10.11.12.13
+
+#####################################################
+递归解析：由客户端发起请求解析，首选DNS服务器与其他DNS服务交互，最终将答案带回来的过程
+
+  是否允许递归解析
+  options {
+        directory       "/var/named";
+        recursion no;      #禁用递归解析
+  };
+
+ 迭代解析：首选DNS服务器与其他DNS服务交互过程
+
+#####################################################
+DNS主机名映射文件
+作用：只为本机直接提供解析结果
+
+[root@svr7 /]# tail -1 /etc/hosts
+ 192.168.4.120  www.sina.com
+
+[root@svr7 /]# ping www.sina.com
+   
+ 用户解析域名 www.haha.com：
+      1./etc/hosts(优先级最高)
+      2./etc/resolv.conf 
+          3.寻找DNS服务器
+
+################################################
+缓存DNS服务器：缓存解析记录，加速解析过程
+  
+   搭建方式：
+      1.全局转发式缓存DNS服务器
+      2.根域迭代缓存DNS服务器
+
+
+在真机上搭建缓存DNS服务器
+
+一、真机搭建Yum仓库
+1.查看系统版本，查看镜像文件
+[root@room9pc01 ~]# cat /etc/redhat-release 
+CentOS Linux release 7.4.1708 (Core) 
+[root@room9pc01 ~]# ls /iso/
+2.进行挂载
+# mkdir  /dvd
+# mount  /iso/CentOS-7-x86_64-DVD-1708.iso  /dvd
+# ls  /dvd
+
+3.书写客户端配置文件
+# cd  /etc/yum.repos.d/
+# mkdir  repo
+# mv   *.repo     repo
+# cat  dvd.repo
+ [dvd]
+ name=CentOS7.4
+ baseurl=file:///dvd
+ enabled=1
+ gpgcheck=0
+
+# yum  repolist
+# yum  -y  install  bind  bind-chroot
+########################################################
+二、构建缓存服务器
+[root@room9pc01 ~]# cat /etc/resolv.conf
+ nameserver 172.40.1.10
+
+[root@room9pc01 ~]# cp /etc/named.conf  /root/
+[root@room9pc01 ~]# vim /etc/named.conf 
+ options {
+        directory       "/var/named";
+        forwarders {  172.40.1.10;  };
+ };
+[root@room9pc01 ~]# systemctl restart named
+
+三、虚拟机A测试
+[root@svr7 /]# nslookup www.qq.com 192.168.4.254
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

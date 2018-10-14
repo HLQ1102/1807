@@ -1,0 +1,35 @@
+基于http的代理
+基于tcp/udp的代理
+
+    stream {
+	upstream 'name' {
+	     server ip1:3306;
+	     server ip2:22;   
+        }
+	server {
+	    listen 12345;
+	    proxy_pass name;	
+	}
+     }
+    http{
+	upstream 集群名称{
+	    server ip1 weight=2;
+	    server ip2 max_fails=3 fail_timeout; //失败次数达到max_fails后，进入fial_timeout;
+	}
+	server {
+	    listen 80;
+	    server_name www.a.com;
+	    location / {
+	         proxy_pass 集群名称;
+	     }
+	}
+    }
+nginx优化
+	1.并发默认1024【nginx.conf,ulimit -a】
+	2.414错误，用户URL太长，服务器缓存太小【nginx.conf】
+	3.404错误，自定义错误页面【nginx.conf】error_page 404 /a.html
+	4.用户的浏览器缓存
+		location ~* .\(jpg|mp3) {
+		expires 30d;
+		}
+

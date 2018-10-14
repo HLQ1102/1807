@@ -1,0 +1,81 @@
+问题一：
+时间不同步
+[root@node1 ~]# ceph -s
+    cluster 29908a48-7574-4aac-ac14-80a44b7cffbf
+     health HEALTH_WARN
+            clock skew detected on mon.node2, mon.node3
+            Monitor clock skew detected 
+     monmap e1: 3 mons at {node1=192.168.4.11:6789/0,node2=192.168.4.12:6789/0,node3=192.168.4.13:6789/0}
+            election epoch 10, quorum 0,1,2 node1,node2,node3
+     osdmap e36: 6 osds: 6 up, 6 in
+            flags sortbitwise
+      pgmap v4381: 64 pgs, 1 pools, 115 MB data, 3915 objects
+            578 MB used, 60795 MB / 61373 MB avail
+                  64 active+clean
+
+时间同步后正常
+[root@node1 ~]# ceph -s
+    cluster 29908a48-7574-4aac-ac14-80a44b7cffbf
+     health HEALTH_OK
+     monmap e1: 3 mons at {node1=192.168.4.11:6789/0,node2=192.168.4.12:6789/0,node3=192.168.4.13:6789/0}
+            election epoch 10, quorum 0,1,2 node1,node2,node3
+     osdmap e36: 6 osds: 6 up, 6 in
+            flags sortbitwise
+      pgmap v4381: 64 pgs, 1 pools, 115 MB data, 3915 objects
+            578 MB used, 60795 MB / 61373 MB avail
+                  64 active+clean
+[root@node1 ~]# 
+
+error 正在同步数据，同步完成后恢复
+
+问题二：
+重新节点后，检查状态报错
+[root@node1 ceph-cluster]# ceph -s
+    cluster 29908a48-7574-4aac-ac14-80a44b7cffbf
+     health HEALTH_ERR
+            56 pgs are stuck inactive for more than 300 seconds
+            56 pgs stale
+            56 pgs stuck stale
+     monmap e1: 3 mons at {node1=192.168.4.11:6789/0,node2=192.168.4.12:6789/0,node3=192.168.4.13:6789/0}
+            election epoch 16, quorum 0,1,2 node1,node2,node3
+     osdmap e39: 6 osds: 1 up, 1 in; 28 remapped pgs
+            flags sortbitwise
+      pgmap v4384: 64 pgs, 1 pools, 115 MB data, 3915 objects
+            98352 kB used, 10132 MB / 10228 MB avail
+                  56 stale+active+clean
+                   8 active+clean
+解决办法
+重新授权
+[root@node1 ceph-cluster]# chown ceph.ceph /dev/vdb1
+[root@node1 ceph-cluster]# chown ceph.ceph /dev/vdb2
+重启服务
+[root@node1 ceph-cluster]# systemctl restart ceph\*
+重新检查状态就正常了理论
+[root@node1 ceph-cluster]# ceph -s
+    cluster 29908a48-7574-4aac-ac14-80a44b7cffbf
+     health HEALTH_OK
+     monmap e1: 3 mons at {node1=192.168.4.11:6789/0,node2=192.168.4.12:6789/0,node3=192.168.4.13:6789/0}
+            election epoch 22, quorum 0,1,2 node1,node2,node3
+     osdmap e46: 6 osds: 6 up, 6 in
+            flags sortbitwise
+      pgmap v4398: 64 pgs, 1 pools, 115 MB data, 3915 objects
+            565 MB used, 60808 MB / 61373 MB avail
+                  64 active+clean
+把授权写进/etc/rc.local里面，下次重启就不用再手动授权
+[root@node1 ceph-cluster]# cat /etc/rc.local 
+#!/bin/bash
+# THIS FILE IS ADDED FOR COMPATIBILITY PURPOSES
+#
+# It is highly advisable to create own systemd services or udev rules
+# to run scripts during boot instead of using this file.
+#
+# In contrast to previous versions due to parallel execution during boot
+# this script will NOT be run after all other services.
+#
+# Please note that you must run 'chmod +x /etc/rc.d/rc.local' to ensure
+# that this script will be executed during boot.
+
+touch /var/lock/subsys/local
+chown ceph.ceph /dev/vdb1
+chown ceph.ceph /dev/vdb2
+

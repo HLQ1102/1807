@@ -1,0 +1,168 @@
+存放当前系统版本信息配置文件/etc/redhat-release
+启动日志(包含蓝牙、网卡相关信息)：/var/log/dmesg
+内存大小、空闲情况配置文件/proc/meminfo
+网卡配置文件/etc/sysconfig/network-scripts/ifcfg-eth0
+主机名配置文件/etc/hostname
+Yum客户端配置文件：/etc/yum.repos.d/*.repo
+永久别名的配置文件/root/.bashrc
+DNS服务器配置文件/etc/resolv.conf 
+所有用户的基本信息配置文件 /etc/passwd
+   nsd07:x:1502:1502::/mnt/nsd07:/bin/bash
+    用户名:密码占位符:UID:基本组的GID:用户的描述信息:用户的家目录:解释器
+/sbin/nologin:禁止用户登录系统shell
+用户密码信息存放在 /etc/shadow
+组基本信息存放在 /etc/group
+		  /etc/gshadow
+NTP服务器，修改配置文件/etc/chrony.conf
+开机自动挂载文件 /etc/fstab
+计划任务日志文件:/var/log/crond
+计划任务配置文件/var/spool/cron/root
+root用户邮件文件：/var/mail/root
+所有的日志文件：/var/log
+samba的配置文件：/etc/samba/smb.conf
+ftp配置文件：/etc/vsftpd/vsftpd.conf
+历史全局记录个数：/etc/profile
+保存历史命令的文件：~/.bash_history
+安全日志：/var/log/secure
+网站访问日志：/var/log/httpd/access_log
+ngin全局配置文件：/usr/local/nginx/conf/nginx.conf
+php-fpm配置文件:/etc/php-fpm.d/www.conf
+系统内核文件：/etc/security/limits.conf
+所有的yum装包的服务软件所在的服务路径：/usr/lib/systemd/system  //可以手写
+服务端的session默认存放位置：/var/lib/session/
+Tomcat的根文件夹：/usr/local/tomcat/webapps/ROOT/
+Tomcat的配置文件：/usr/local/tomcat/conf/server.xml
+开机自启脚本:/etc/rc.local 
+udev规则文件: /etc/udev/rules.d/*.rules
+udev主配置文件: /etc/udev/udev.conf
+
+网卡文件：/etc/sysconfig/network-scripts/ifcfg-enp1s0
+		DEVICE=enp1s0            设备名
+		ONBOOT=yes			开机启动项
+		BOOTPROTO=dhcp		使用ip获取方式：1.dhcp 2.none(固定的ip) 3.static
+		IPADDR=192.168.4.100	ip地址
+		PREFIX=24			子网掩码
+		GATEWAY=192.168.4.254	网关
+		DNS1=172.25.254.254	DNS服务器地址，优先级大于/etc/resolv.conf
+RX packets 41246  bytes 10213653 (9.7 MiB) //入站流量详情
+TX packets 22923  bytes 55787293 (53.2 MiB) //出站流量详情
+
+历史命令存放位置及数量：
+~/.bash_history
+历史命令数量控制文件：/etc/profile  //HISTSIZE
+
+Nginx默认安装路径为/usr/local/nginx,该目录下会提供4个子目录，分别如下：
+/usr/local/nginx/conf	配置文件目录
+/usr/local/nginx/html	网站页面目录
+/usr/local/nginx/logs	Nginx日志目录
+/usr/local/nginx/sbin	主程序目录
+
+/etc/init.d/   rhel6存放启动服务的脚本文件目录
+源码包编译
+rpm包
+源码包----gcc make---->可以执行的文件--->运行安装
+软件的功能可按需选择/定制，安装位置可以选择
+1.安装gcc make 
+2.Tar解包，释放到指定目录
+3.  ./configure 配置，指定安装目录/功能模块等选项
+	作用1：检测系统是否安装gcc
+	作用2：指定安装目录/功能模块等选项
+	指定安装位置的选项：./configure --prefix=
+	例子：  ./configure --prefix=/mnt/myrpm
+4.make编译，生成可执行的二进制程序文件（需要再文件文件夹内执行）
+	make install 安装，将编译好的文件复制到安装目录
+总结：
+指定安装位置/usr
+指定用户nobody
+模块--with-模块名称
+	./configure  检查环境gcc...   指定用户、组、模块、安装位置
+	make  C语言的源码---->二进制
+	make  install  拷贝编译链接好的软件拷贝到安装位置
+	升级：mv把老的程序重命名
+	      cp objs/nginx  安装目录
+		kill(pid)  killall 名称 
+全剧配置
+http{
+	//虚拟主机
+	server{
+		listen 80;
+		server_name www.a.com;
+		aut_basic_ "xxx";
+		auth_basic_user_file "/user/local/nginx/";
+		root html;
+		}
+	//安全的html，https
+	server{
+		listen 443 ssl;
+		server_name www.b.com;
+	sertification  "证书名称";
+	certification_key "私钥名称";
+		root html;  //相对路径
+		}
+	}
+:%s  全文替换   ：3,100s/#//  第三行到第100的#去掉
+
+网页登陆验证
+yum install httpd-tools
+htpasswd -c /usr/local/nginx/conf/pass  xiao
+>12345   //密码
+# nginx -s reload
+ 
+C：写软件,写系统
+PHP:网页代码
+Python:运维\人工职能
+
+	
+
+加密算法一般分为对称算法、非对称算法、信息摘要。
+对称算法有：AES、DES，主要应用在单机数据加密。产生一个密钥，没有公钥
+非对称算法有：RSA、DSA，主要应用在网络数据加密。产生一个公钥和一个私钥，公钥加密，私钥解密
+信息摘要：MD5、sha256，主要应用在数据完整性校验、数据秒传等。
+	MD5加密只跟内容有关，内容不变，MD5码不变
+	使用： md5sum 1.txt
+CA中心（证书(私钥)颁发机构）每个浏览器里都自带CA中心的信息
+	用户访问www.baidu.com登陆，baidu发证书给用户，用户浏览器证书给CA中心验证，通过后，用户使用证书把用户名和密码加密后
+	发给baidu，百度使用自己的私钥进行解密，登陆成功
+
+
+源码安装Nginx时必须使用--with-http_ssl_module参数，启用加密模块，对于需要进行SSL加密处理的站点添加ssl相关指令（设置网站需要的私钥和证书）。
+
+PXE装机
+dhcp,tftp,配置文件,http共享
+设置不同版本的系统的kickstart文件时需要将yum缓存清空，再进行利用system-config-kickstart生成kickstart文件，
+否则会造不同系统的软件包错乱而造成装机不成功
+
+查询最近登录失败的用户访问信息 lastb
+文件更名： mv /etc/passwd{,.bak} #在/etcpasswd后面加后缀
+
+linux系统下一切设备皆文件
+SCSI设备              sda sdb sdc
+IDE设备 识别硬件命名 hda hdb hbc
+关闭网络管理器：systemctl stop NetworkManager
+增加网卡：
+	cd /etc/sysconfig/network-scripts
+	cp ifcfg-eth0 ifcfg-eth1
+	vim ifcfg-eth1
+		NAME=eth1
+		DEVICE=eth1
+		IPADDR=192.168.4.5 //其余信息不变
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+
+[192.168.4.254_rhel7]
+name=added from: http://192.168.4.254/rhel7
+baseurl=http://192.168.4.254/rhel7
+enabled=1
+

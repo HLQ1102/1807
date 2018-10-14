@@ -1,0 +1,58 @@
+vncviewer 176.204.100.200:1 pass:123456
+ssh -X 176.204.101.195 pass:Taren1
+web服务更改网页文件根目录注意事项
+	软件：httpd
+	vim /etc/httpd/conf/httpd.conf (主配置文件)
+	vim /etc/httpd/conf.d/*.conf
+	防火墙
+	selinux安全上下文值 使用命令chcon --reference=/var/www/ /xiao 更改
+	访问端口更改:
+		打开selinux的semanage
+			semanage port -a -t http_port_t -p tcp 8909
+			semanage port -l | grep http  #查看http端口情况
+	更改虚拟主机的路径/etc/http/conf.d/*.conf
+		<VirtualHost *:80>
+        		ServerName www0.example.com
+       		DocumentRoot /www/cn
+		</VirtualHost>
+
+	更改acl访问控制项/etc/http/conf.d/*.conf
+		<Directory /www/cn/>
+      		equire all granted
+		</Directory>
+
+samba共享注意事项：
+	软件： yum -y install samba
+	vim /etc/samba/smb.conf
+	添加共享用户 pdbedit -a harry
+	防火墙
+	setsebool samba_export_t rw
+
+iscsi网络磁盘共享注意事项
+	1.服务端：
+		软件： targetcli
+		backstore/block
+		iscsi/iqn.2018.08.old.cn:xiao/tpd1/luns|acls|portals create
+	2.客户端：
+		软件：iscsi-initiator-utils
+	3.配置完/etc/iscsi/initiatorname.iscsi文件， 
+		重启systenctl restart iscsid
+	4.配置完iscsiadm --mode discoverydb --type sendtargets --portal 192.168.1.10 --discover 	
+		重启systemctl restart iscsi
+
+1.查看后台进程并输出进程号：jobs -l
+2.记录与系统启动相关的消息的日志文件是：/var/dmesg
+3.nginx客户端浏览器浏览器缓存数据的时间：expires
+4.awk输出当前行最后一列内容：print $NF
+5.pkill命令参数为进程名，killall命令参数为进程名
+6.查看最近登陆成功的用户的命令是：last，登陆失败的用户命令是：lastb
+7.who查看正在的登陆的用户的信息
+8.rsync -a 源目录 目的目录  //源目录以"/"作为结尾，代表同步目录内容，如果没有"/",则表示同步目录本身，以本身作为源
+9.RAID0是条带模式,无冗余 RAID1是镜像模式 
+10.RAID5是以校验算法，至少三块磁盘，数据的内容分别存储在其中两块磁盘上，第三块磁盘用来存储校验值,RAID6为RAID5的提升
+11.head -5 /etc/passwd | awk '{i++}NED{print i}' //共5行 awk中的i++执行5次
+12./var/log/messages //记录时间、地点、任务、事件
+13.yum provide /etc/dovecot.conf //查看文件由那个RPM包安装产生的
+14.sort可以对数据进行排序
+15.awk中对"逻辑与"和"逻辑或"非别使用&&、||表示
+

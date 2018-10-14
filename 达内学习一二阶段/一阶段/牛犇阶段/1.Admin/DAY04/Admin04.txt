@@ -1,0 +1,251 @@
+教学环境介绍
+
+• 每个学员机上有三台预先配置好的虚拟机
+  – server —— 作为练习用服务器
+  – desktop —— 作为练习用客户机
+  – classroom —— 提供网关/DNS/软件素材等资源       
+
+一、 优先classroom开启系统
+二、 还原操作,优先classroom虚拟机
+
+[root@room9pc01 ~]# rht-vmctl reset classroom
+[root@room9pc01 ~]# rht-vmctl reset server
+[root@room9pc01 ~]# rht-vmctl reset desktop
+
+三、虚拟机Server与虚拟机Desktop
+      用户：root
+      密码：redhat
+
+虚拟机Server
+       操作系统版本：RHEL7.0
+       主机名：server0.example.com
+       网卡eth0的IP地址：172.25.0.11/24
+
+虚拟机Desktop
+       操作系统版本：RHEL7.0
+       主机名：desktop0.example.com
+       网卡eth0的IP地址：172.25.0.10/24
+
+默认两台虚拟机可以进行ping通信
+
+四、利用真机，进行远程管理
+
+1.利用真机进行ping测试
+[root@room9pc01 ~]# ping 172.25.0.11
+[root@room9pc01 ~]# ping 172.25.0.10
+
+2.在真机上，可以利用ssh进行远程管理
+[root@room9pc01 ~]# ssh    用户名@对方的IP地址
+[root@room9pc01 ~]# ssh   root@172.25.0.11
+Last login: Fri Aug  3 09:22:26 2018
+[root@server0 ~]# hostname
+server0.example.com
+[root@server0 ~]# ifconfig 
+[root@server0 ~]# exit        #退出到真机
+
+   补充快捷键：  Ctrl+shift+t  新开一个终端
+
+  -X(大写) :运程管理时，在本机运行对方的图形程序
+
+[root@server0 ~]# exit
+
+[root@room9pc01 ~]# ssh -X root@172.25.0.11
+
+[root@server0 ~]# firewall-config   #运行防火墙图形程序
+  
+[root@server0 ~]# firefox           #运行图形浏览器
+
+####################################################
+辅助操作：方便远程管理
+真机操作：设置永久别名的配置文件
+[root@room9pc01 ~]# vim  /root/.bashrc   系统级配置文件
+ # .bashrc
+ alias   gos='ssh  -X  root@172.25.0.11'
+ alias   god='ssh  -X  root@172.25.0.10'
+  
+
+
+ /root/.bashrc :新开一个终端生效
+ 
+##################################################
+软件包管理
+
+一、具备软件包
+[root@server0 ~]# poweroff 
+
+[root@room9pc01 ~]# gos
+
+[root@server0 ~]# mkdir /dvd
+
+[root@server0 ~]# mount  /dev/cdrom  /dvd
+[root@server0 ~]# ls  /dvd
+
+#######################################################
+零散的软件管理
+• RPM Package Manager,RPM包管理器
+– rpm -q 软件名...
+– rpm -ivh 软件名-版本信息.rpm...
+– rpm -e 软件名...
+
+
+Linux安装软件包：
+    默认情况下不允许选择安装位置，不允许选择安装功能
+
+[root@server0 ~]# rpm -q vsftpd    #查询软件包是否安装
+未安装软件包 vsftpd 
+[root@server0 ~]# rpm -q firefox
+ 
+[root@server0 ~]# rpm -q  vsftpd      #查询是否安装成功
+[root@server0 ~]# rpm -ql vsftpd      #查询软件包安装清单
+
+[root@server0 ~]# rpm -e  vsftpd      #卸载软件
+[root@server0 ~]# rpm -q  vsftpd      #查询软件包是否卸载成功
+
+补充：导入红帽签名信息
+
+# rpm --import /dvd/RPM-GPG-KEY-redhat-release
+
+########################################################
+常见的报错：依赖关系
+[root@server0 ~]# rpm -ivh /dvd/Packages/bind-chroot-9.9.4-50.el7.x86_64.rpm 
+错误：依赖检测失败：
+	bind = 32:9.9.4-50.el7 被 bind-chroot-32:9.9.4-50.el7.x86_64 需要
+
+######################################################
+ Yum软件包仓库，自动解决依赖关系
+
+   服务：为客户端自动解决依赖关系安装软件
+
+ 虚拟机classroom默认搭建Web服务，将光盘利用Web共享给所有客户端
+  
+ 服务端：虚拟机classroom,具备众多rpm包，具备仓库清单文件
+
+ http://classroom.example.com/content/rhel7.0/x86_64/dvd/
+ http://classroom.example.com/content/dvd/
+
+ 客户端：虚拟机server,指定服务端位置
+ 书写Yum客户端配置文件：/etc/yum.repos.d/*.repo
+  错误的配置文件与正确配置文件会相互影响
+
+[root@server0 ~]# rm -rf /etc/yum.repos.d/*
+[root@server0 ~]# vim  /etc/yum.repos.d/rhel7.repo
+  [rhel7]           #仓库标识，仓库的名字
+  name=rhel7.0      #仓库的描述信息
+  baseurl=http://classroom.example.com/content/rhel7.0/ 
+  x86_64/dvd/       #指定服务端位置，最好浏览器进行复制粘贴
+
+  enabled=1         #启用该文件
+  gpgcheck=0        #不检测红帽的签名信息
+
+[root@server0 ~]# yum  repolist    #显示仓库信息
+
+#####################################################
+yum的使用
+
+[root@server0 ~]# yum  -y  install  httpd
+[root@server0 ~]# yum  -y  install  gcc
+[root@server0 ~]# yum  -y  install  bind-chroot
+[root@server0 ~]# yum  -y  install  system-config-kicstart 
+[root@server0 ~]# yum  -y  install  sssd
+[root@server0 ~]# yum remove httpd    #卸载
+
+清空Yum缓存：
+
+[root@server0 ~]# yum clean all
+
+搜寻关键字
+[root@server0 ~]# yum search  ftp
+
+#####################################################
+升级内核，安装一个新的内核
+
+• 使用wget下载工具,默认下载到当前目录下
+– wget 软件包的URL网址
+
+[root@server0 /]# wget http://classroom.example.com/content/rhel7.0/x86_64/errata/Packages/kernel-3.10.0-123.1.2.el7.x86_64.rpm
+
+[root@server0 /]# ls
+[root@server0 /]# uname  -r
+
+# rpm -ivh kernel-3.10.0-123.1.2.el7.x86_64.rpm  #安装新内核
+
+[root@server0 /]# uname  -r
+[root@server0 /]# reboot       #重起虚拟机
+[root@room9pc01 ~]# gos
+[root@server0 ~]# uname  -r     #查看内核版本
+3.10.0-123.1.2.el7.x86_64  
+[root@server0 ~]# 
+
+######################################################
+wget 软件包的URL网址   -O  /目录路径/新文件  
+
+  -O 另存为，必须要写文件名
+
+#####################################################
+网络配置
+
+一、永久的主机名配置
+[root@server0 ~]# vim /etc/hostname   #主机名配置文件
+ A.tedu.cn
+[root@server0 ~]# exit
+
+[root@room9pc01 ~]# gos
+
+[root@A ~]# hostname
+ A.tedu.cn
+[root@A ~]# 
+
+二、配置IP地址、子网掩码、网关地址
+
+网卡配置：/etc/sysconfig/network-scripts/ifcfg-eth0
+
+1.利用命令显示识别的网卡名字
+
+[root@A ~]# nmcli connection show
+
+2.配置IP地址、子网掩码、网关地址
+[root@A ~]# nmcli  connection  modify  'System eth0'       
+  ipv4.method    manual 
+  ipv4.addresses   '172.25.0.110/24      172.25.0.254'  
+  connection.autoconnect   yes
+
+  nmcli  connection   修改    ' 网卡的名称'
+  ipv4.方法      手工配置
+  ipv4.地址      'IP地址/子网掩码     网关地址'  
+    每次开机自动启用配置
+ 
+3.激活网卡配置
+[root@A ~]# nmcli connection up 'System eth0'
+[root@room9pc01 ~]# ssh -X root@172.25.0.110 #真机进行远程管理
+[root@A ~]# ifconfig    #查看IP地址的命令
+[root@A ~]# route       #查看网关地址的命令
+          Gateway        
+                 172.25.0.254    
+########################################################
+字符界面图形方式修改网络IP地址、子网掩码、网关地址
+[root@A ~]# nmtui
+[root@A ~]# nmcli connection up 'System eth0'  #激活网卡配置
+###################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

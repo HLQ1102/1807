@@ -1,0 +1,57 @@
+nginx是一个web服务器
+[可以存放网站页面(代码)的服务器软件]
+
+客户端：浏览器---------->服务器(软件)[网页]
+[网页] html,css+div,php,jsp,py...
+
+yum -y install gcc pcre-devel openssl-devel 
+tar -xf nginx-1.12.2.tar.gz
+cd nginx-1.12.2
+./configure --prefix=/usr/local/nginx --user=nginx --group=nginxj --with-http_ssl_module
+make 
+make install
+
+用户认证：
+yum -y install httpd-tools
+虚拟主机内：
+	auth_basic "nihao world:";
+	auth_basic_user_file "/usr/local/nginx/pass";
+htpasswd -c 
+
+默认首页  index 先后顺序标示按顺序查找
+
+LNMP
+    Linux
+    nginx
+    mariadb mariadb-server mariadb-devel
+    php php-fpm php-mysql
+动静分离
+    server{
+		listen 80;
+		server_name  ;
+		location / {
+			root hrml;		
+		}
+		location ~ \.php$ {
+			root html;
+			fastcgi_pass 127.0.0.1:9000;
+		}
+}
+测试：
+	vim /usr/local/nginx/html/test.php
+	<?php  echo "123" ?>
+用户---> nginx---PHP--->数据库
+
+地址重写
+	rewrite 旧地址 新地址 [选项]
+	rewrite /a.html /b.html;
+	rewrite /a.html /test/a.html;  //这里的根都是相对路径，相对与网站的根;
+	rewrite ^/ http://www.tmooc.cn  //正则，只能访问tmooc的根
+	rewrite ^/(.*) http://www.tmooc.cn/$1 ;  //可以指定根下的子目录
+	
+	/test.html (正常)
+	/andriod/test.html (手机)
+	if($http_user_agent ~* andriod){
+	   rewrite ^/(.*) /andriod/$1;	
+	}  //当手机访问时显示手机的页面
+

@@ -1,0 +1,365 @@
+一、设置永久的DNS服务器，域名解析 ： 将域名解析为IP地址
+       指定DNS服务器配置文件
+
+[root@server0 ~]# vim  /etc/resolv.conf 
+ nameserver 172.25.254.254
+
+[root@server0 ~]# nslookup  域名
+
+[root@server0 ~]# nslookup classroom.example.com
+[root@server0 ~]# nslookup server0.example.com
+[root@server0 ~]# nslookup desktop0.example.com
+
+######################################################
+
+二、重定向输出:将前面命令的输出结果,写入到文本文件中
+    
+       >:覆盖重定向
+       >>:追加重定向
+
+[root@server0 ~]# ls --help 
+[root@server0 ~]# ls --help  >  /opt/ls.txt
+[root@server0 ~]# vim /opt/ls.txt
+
+[root@server0 ~]# hostname
+[root@server0 ~]# hostname > /opt/ls.txt 
+[root@server0 ~]# cat /opt/ls.txt
+[root@server0 ~]# hostname >> /opt/ls.txt 
+[root@server0 ~]# cat /opt/ls.txt
+
+[root@server0 ~]# ifconfig  >> /opt/ls.txt
+[root@server0 ~]# vim  /opt/ls.txt
+[root@server0 ~]# less  /opt/ls.txt
+
+[root@server0 ~]# echo 123456 > /opt/ls.txt  
+[root@server0 ~]# cat /opt/ls.txt
+
+[root@server0 ~]# echo hello >> /opt/ls.txt
+[root@server0 ~]# cat /opt/ls.txt
+
+# echo nameserver 172.25.254.254  >  /etc/resolv.conf
+# cat /etc/resolv.conf 
+
+[root@server0 ~]# echo  A.tedu.cn  >  /etc/hostname
+[root@server0 ~]# cat  /etc/hostname
+
+[root@server0 ~]# exit
+
+[root@room9pc01 ~]# gos
+[root@A ~]# 
+
+#####################################################
+ 管道操作：将前面命令的输出结果，交由后面命令再处理一次
+
+  显示文件内容/etc/passwd的8-12行？
+
+[root@A ~]# head -12 /etc/passwd   |   tail -5 
+
+[root@A ~]# cat -n /etc/passwd  |  head -12  |  tail -5
+
+[root@A ~]# ifconfig  |  less
+
+[root@A ~]# ifconfig  |  head  -2   #查看第一张网卡IP地址
+
+#################################################
+
+管理用户和组
+
+ 用户帐号：1.能够登陆操作系统  2.不同的用户不同的身份，可以进行很好控制
+
+  组 ： 方便管理用户 ，权限分配方面。
+          将想要具备相同权限的用户，加入一个组，最后给组设置权限
+
+  组的分类：基本组        附加组（从属组）
+   一个用户必须至少属于一个组
+
+  UID:唯一标识一个用户，编号
+  GID:唯一标识一个组，编号
+ 
+    管理员root的UID：永远为0
+  RHEL7普通用户的UID：默认从1000起始
+    系统程序用户UID范围：1-999
+
+###################################################
+添加用户
+所有用户的基本信息存放在 /etc/passwd 文件
+每一个用户占用，一行信息
+ [root@A ~]# head -1 /etc/passwd
+ root:x:0:0:root:/root:/bin/bash
+ 用户名:密码占位符:UID:基本组的GID:用户的描述信息:用户的家目录:解释器
+
+• 使用 useradd 命令
+– useradd [选项]... 用户名
+
+• 常用命令选项
+ -u 用户id、-d 家目录路径、-G 附加组、-s 登录Shell(登陆解释器程序)
+
+[root@A ~]# useradd nsd01
+[root@A ~]# id nsd01
+uid=1002(nsd01) gid=1002(nsd01) 组=1002(nsd01)
+[root@A ~]# useradd nsd02
+[root@A ~]# id nsd02
+[root@A ~]# useradd nsd03
+[root@A ~]# id nsd03
+
+[root@A ~]# useradd  -u 1500 nsd04    #指定用户的UID创建用户
+[root@A ~]# id nsd04
+uid=1500(nsd04) gid=1500(nsd04) 组=1500(nsd04)
+
+
+[root@A ~]# useradd -d /mnt/nsd07  nsd07   #指定家目录创建用户
+[root@A ~]# id nsd07
+
+[root@A ~]# grep nsd07 /etc/passwd
+nsd07:x:1502:1502::/mnt/nsd07:/bin/bash
+用户名:密码占位符:UID:基本组的GID:用户的描述信息:用户的家目录:解释器
+[root@A ~]# ls /mnt/
+
+[root@A ~]# groupadd  tarena          #创建组
+[root@A ~]# useradd -G tarena nsd08   #创建用户指定加入附加组
+[root@A ~]# id nsd08
+
+ /sbin/nologin:禁止用户登录系统
+
+[root@A ~]# useradd -s /sbin/nologin nsd09
+[root@A ~]# grep nsd09 /etc/passwd
+
+[root@A ~]# useradd -s /sbin/nologin nsd10
+[root@A ~]# grep nsd10 /etc/passwd
+
+#####################################################
+
+设置登录密码
+
+• 使用 passwd 命令
+– passwd [用户名]
+
+[root@A ~]# passwd nsd01
+更改用户 nsd01 的密码 。
+新的 密码：                          #输入新密码
+无效的密码： 密码少于 8 个字符
+重新输入新的 密码：             #重新输入新密码
+passwd：所有的身份验证令牌已经成功更新。
+
+[root@A ~]# su - nsd01    # 临时切换用户身份： su  -  用户名
+[nsd01@A ~]$ passwd 
+Changing password for user nsd01.
+Changing password for nsd01.
+(current) UNIX password:        #输入旧密码
+New password:             #输入新密码，符合复性要求 
+Retype new password:      #重新输入新密码，符合复性要求 
+passwd: all authentication tokens updated successfully.
+
+[nsd01@A ~]$ exit     #退出回到root
+
+#####################################################
+
+非交互式设置密码
+[root@A ~]# echo 123456 | passwd --stdin nsd01
+
+[root@A ~]# echo 123456 | passwd --stdin nsd02
+
+
+###################################################
+用户密码信息存放在 /etc/shadow 文件
+
+  用户名：密码加密字符串：上一次修改密码的时间.......
+
+####################################################
+修改用户属性
+• 使用 usermod 命令
+– usermod [选项]... 用户名
+
+• 常用命令选项
+– -u 用户id、-d 家目录路径、-s 登录Shell
+– -G 附加组
+
+[root@A ~]# useradd nsd12
+[root@A ~]# grep nsd12 /etc/passwd
+
+[root@A ~]# usermod -u 1510 -d /opt/nsd12      -G tarena  -s /sbin/nologin  nsd12
+
+[root@A ~]# grep nsd12 /etc/passwd
+
+[root@A ~]# id nsd12
+
+  可以通过vim修改/etc/passwd文件内容，达到修改用户属性
+
+#######################################################
+删除用户
+• 使用 userdel      命令
+– userdel  [-r]   用户名      #连同家目录一并删除
+
+[root@A ~]# userdel nsd01 
+[root@A ~]# id nsd01
+
+
+######################################################
+管理组账号
+
+添加组
+组基本信息存放在 /etc/group 文件
+[root@A ~]# grep stugrp /etc/group
+ stugrp:x:1702:
+
+  组名：组的密码占位符：组的GID标识：组的成员列表
+
+
+• 使用 groupadd 命令
+– groupadd [-g 组ID] 组名
+
+[root@A ~]# groupadd  stugrp
+
+[root@A ~]# useradd  harry
+[root@A ~]# useradd  natasha
+[root@A ~]# useradd  kenji
+[root@A ~]# useradd  jack
+
+
+####################################################
+
+• 使用 gpasswd 命令
+– gpasswd -a 用户名 组名
+– gpasswd -d 用户名 组名
+
+[root@A ~]# grep stugrp /etc/group
+
+[root@A ~]# gpasswd -a harry stugrp     #将用户加入组
+[root@A ~]# grep stugrp /etc/group
+
+[root@A ~]# gpasswd -a natasha stugrp
+[root@A ~]# grep stugrp /etc/group
+
+[root@A ~]# gpasswd -d natasha stugrp   #将用户从组中删除
+[root@A ~]# grep stugrp /etc/group
+
+[root@A ~]# gpasswd -a kenji stugrp
+[root@A ~]# grep stugrp /etc/group
+
+[root@A ~]# gpasswd -a jack stugrp
+[root@A ~]# grep stugrp /etc/group
+
+删除组
+• 使用 groupdel 命令
+– groupdel 组名
+
+[root@A ~]# groupdel stugrp
+#####################################################
+tar备份与恢复(归档及压缩)
+
+ Linux常见的压缩格式及命令工具:
+	gzip ---> .gz 
+	bzip2 ---> .bz2
+	xz ---> .xz 
+
+制作tar包:
+       
+ tar  选项       /路径/归档及压缩包的名字      /路径/源文档 .......
+
+释放tar包:
+
+ tar  选项    /路径/归档及压缩包的名字   -C  /路径/
+
+
+– -C（大写）:指定释放的位置
+
+– -c:创建归档
+– -x:释放归档
+– -f:指定归档文件名称,必须放在所有选项的最后
+– -z、-j、-J:调用 .gz、.bz2、.xz 格式的工具进行处理
+
+– -t:显示归档中的文件清单
+
+红色：压缩包
+
+[root@A ~]# tar -zcf /opt/test01.tar.gz /home/ /etc/passwd
+[root@A ~]# ls /opt/
+
+[root@A ~]# tar -jcf /opt/abc.tar.bz2 /home/ /etc/passwd
+[root@A ~]# ls /opt/
+
+[root@A ~]# tar -Jcf /opt/nsd.tar.xz /home/ /etc/passwd
+[root@A ~]# ls /opt/
+
+使用 tar 工具完成以下备份任务:
+– 创建一个名为 /root/backup.tar.bz2 的归档文件
+– 其中包含 /usr/local 目录中的内容
+– tar 归档必须使用 bzip2 进行压缩
+
+[root@A ~]# tar -jcf /root/backup.tar.bz2 /usr/local/  
+[root@A ~]# ls /root/
+
+######################################################
+释放
+[root@A ~]# rm -rf /mnt/*
+[root@A ~]# ls /mnt/
+[root@A ~]# tar  -xf  /root/backup.tar.bz2  -C  /mnt/
+[root@A ~]# ls /mnt/
+[root@A ~]# ls /mnt/usr/
+[root@A ~]# ls /mnt/usr/local/
+
+查看tar包内容
+[root@A ~]# tar -tf /root/backup.tar.bz2
+
+######################################################
+NTP时间同步
+
+补充命令： date
+修改时间：date  -s  "年-月-日    时：分：秒"
+
+[root@A ~]# date
+[root@A ~]# date -s "2008-10-1  12:10"
+[root@A ~]# date
+#################################################
+时间同步
+
+• Network Time Protocol
+– NTP服务器为客户机提供标准时间
+– NTP客户机需要与NTP服务器保持沟通
+
+ NTP服务器:虚拟机classroom.example.com
+
+ NTP客户机：虚拟机Server0.example.com
+  1.安装一个和NTP服务器沟通的软件
+  [root@A ~]# rpm -q chrony
+  chrony-1.29.1-1.el7.x86_64
+
+  2.指定NTP服务器，修改配置文件/etc/chrony.conf
+  [root@A ~]# vim /etc/chrony.conf
+    在Linux系统中大多数配置文件中，以#开头的行为注释内容
+		#server 0.rhel.pool.ntp.org iburst
+		#server 1.rhel.pool.ntp.org iburst
+		#server 2.rhel.pool.ntp.org iburst
+		server classroom.example.com iburst
+
+   3.重起刷新
+   [root@A ~]# systemctl restart chronyd
+   [root@A ~]# systemctl enable chronyd    #设置开机自启动
+
+   daemon:超级守护程序；守护神;（希腊神话中）半人半神的精灵;
+    
+    4.验证
+   [root@A ~]# date
+
+   [root@A ~]# date -s "2008-10-1  8:0"
+   [root@A ~]# systemctl restart chronyd
+   [root@A ~]# date
+   [root@A ~]# date
+   [root@A ~]# date
+
+######################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
